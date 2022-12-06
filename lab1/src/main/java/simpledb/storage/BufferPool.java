@@ -55,7 +55,7 @@ public class BufferPool {
     public BufferPool(int numPages) {
         // TODO: some code goes here
         this.numPages = numPages;
-        pages = new LRUCache<>(numPages);
+        pages = new LRUCache<PageId,Page>(numPages);
     }
 
     public static int getPageSize() {
@@ -89,7 +89,6 @@ public class BufferPool {
      */
     public Page getPage(TransactionId tid, PageId pid, Permissions perm)
             throws TransactionAbortedException, DbException {
-        // TODO: some code goes here
         return null;
     }
 

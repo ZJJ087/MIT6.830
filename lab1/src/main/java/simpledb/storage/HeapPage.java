@@ -75,9 +75,9 @@ public class HeapPage implements Page {
      * @return the number of tuples on this page
      */
     private int getNumTuples() {
-        // TODO: some code goes here
-        return 0;
-
+        int pageSize = BufferPool.getPageSize();
+        int tupleSize = td.getSize();
+        return (int) Math.floor(pageSize*8.0/(tupleSize*8.0 + 1.0));
     }
 
     /**
@@ -86,10 +86,7 @@ public class HeapPage implements Page {
      * @return the number of bytes in the header of a page in a HeapFile with each tuple occupying tupleSize bytes
      */
     private int getHeaderSize() {
-
-        // TODO: some code goes here
-        return 0;
-
+        return (int) Math.floor(this.getNumTuples()/8.0);
     }
 
     /**
@@ -121,14 +118,14 @@ public class HeapPage implements Page {
      * @return the PageId associated with this page.
      */
     public HeapPageId getId() {
-        // TODO: some code goes here
-        throw new UnsupportedOperationException("implement this");
+       return pid;
     }
 
     /**
      * Suck up tuples from the source file.
      */
-    private Tuple readNextTuple(DataInputStream dis, int slotId) throws NoSuchElementException {
+    private Tuple readNextTuple(DataInputStream dis, int slotId)
+            throws NoSuchElementException {
         // if associated bit is not set, read forward to the next tuple, and
         // return null.
         if (!isSlotUsed(slotId)) {
@@ -294,7 +291,16 @@ public class HeapPage implements Page {
      */
     public int getNumUnusedSlots() {
         // TODO: some code goes here
-        return 0;
+        int unuse = 0;
+        for(int i = 0; i < getHeaderSize(); i++){
+            int bytes = header[i];
+            for(int j = 0; j < 8; j++){
+                if(((bytes >> j) & 1) == 0){
+                    unuse++;
+                }
+            }
+        }
+        return unuse;
     }
 
     /**
@@ -302,7 +308,9 @@ public class HeapPage implements Page {
      */
     public boolean isSlotUsed(int i) {
         // TODO: some code goes here
-        return false;
+        int index = i/8;
+        int offset = i%8;
+        return ((header[index] >> offset) & 1) == 1;
     }
 
     /**
