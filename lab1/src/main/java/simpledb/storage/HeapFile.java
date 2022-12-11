@@ -11,6 +11,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * HeapFile is an implementation of a DbFile that stores a collection of tuples
@@ -104,11 +105,82 @@ public class HeapFile implements DbFile {
         return null;
         // not necessary for lab1
     }
+    //HeapFile的迭代器
+    public class HeapFileIterator implements DbFileIterator{
+        private TransactionId transactionId;
+        private Permissions permissions;
+        private BufferPool bufferPool = Database.getBufferPool();
+        private Iterator<Tuple> iterator;
+        private int num;
+
+        public HeapFileIterator(TransactionId transactionId,Permissions permissions){
+            this.transactionId = transactionId;
+            this.permissions = permissions;
+        }
+        @Override
+        public void open() throws DbException, TransactionAbortedException {
+            num = 0;
+            HeapPageId pageId = new HeapPageId(getId(), num);
+            HeapPage page = (HeapPage) bufferPool.getPage(transactionId,pageId,permissions);
+            if(page == null){
+                throw new DbException("No such page in bufferpool");
+            }else{
+                iterator = page.iterator();
+            }
+        }
+
+        public boolean nextPage() throws TransactionAbortedException, DbException {
+            while (true) {
+                num = num + 1;
+                if (num >= numPages()) {
+                    return false;
+                }
+                HeapPageId heapPageId = new HeapPageId(getId(), num);
+                HeapPage page = (HeapPage) bufferPool.getPage(transactionId, heapPageId, permissions);
+                if (page == null) {
+                    continue;
+                }
+                iterator = page.iterator();
+                if (iterator.hasNext()) {
+                    return true;
+                }
+            }
+        }
+
+        @Override
+        public boolean hasNext() throws DbException, TransactionAbortedException {
+            if(iterator == null){
+                return false;
+            }
+            if(iterator.hasNext()){
+                return true;
+            }else{
+                return nextPage();
+            }
+        }
+
+        @Override
+        public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
+            if(iterator == null){
+                throw  new NoSuchElementException();
+            }
+            return iterator.next();
+        }
+
+        @Override
+        public void rewind() throws DbException, TransactionAbortedException {
+            open();
+        }
+
+        @Override
+        public void close() {
+            iterator = null;
+        }
+    }
 
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
-        // TODO: some code goes here
-        return null;
+        return new HeapFileIterator(tid,Permissions.READ_ONLY);
     }
 
 }

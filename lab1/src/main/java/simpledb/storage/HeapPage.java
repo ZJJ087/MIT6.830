@@ -7,7 +7,9 @@ import simpledb.common.Debug;
 import simpledb.transaction.TransactionId;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -326,8 +328,13 @@ public class HeapPage implements Page {
      *         (note that this iterator shouldn't return tuples in empty slots!)
      */
     public Iterator<Tuple> iterator() {
-        // TODO: some code goes here
-        return null;
+        List<Tuple> tp = new ArrayList<>();
+        for(int i = 0; i < getNumTuples(); i++){
+            if(isSlotUsed(i)){
+                tp.add(tuples[i]);
+            }
+        }
+        return tp.iterator();
     }
 
 }

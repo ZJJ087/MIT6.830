@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Catalog keeps track of all available tables in the database and their
@@ -22,15 +21,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Catalog {
 
-    private List<DbFileItem> dbFiles;
+    private List<Table> tables;
 
-    public class DbFileItem{
-        private DbFile dbFile;
-        private String dbName;
+    public class Table {
+        private DbFile file;
+        private String tableName;
         private String primaryKeyField;
-        public DbFileItem(DbFile dbFile,String dbName, String primaryKeyField){
-            this.dbFile = dbFile;
-            this.dbName = dbName;
+        public Table(DbFile file, String tableName, String primaryKeyField){
+            this.file = file;
+            this.tableName = tableName;
             this.primaryKeyField = primaryKeyField;
         }
     }
@@ -40,7 +39,7 @@ public class Catalog {
      * Creates a new, empty catalog.
      */
     public Catalog() {
-        dbFiles = new ArrayList<>();
+        tables = new ArrayList<>();
     }
 
     /**
@@ -54,18 +53,18 @@ public class Catalog {
      * @param pkeyField the name of the primary key field
      */
     public void addTable(DbFile file, String name, String pkeyField) {
-        DbFileItem table = new DbFileItem(file, name, pkeyField);
-        for(int i=0;i<this.dbFiles.size();i++){
-            DbFileItem tmp = this.dbFiles.get(i);
-            if (tmp.dbName==null){
+        Table table = new Table(file, name, pkeyField);
+        for(int i = 0; i<this.tables.size(); i++){
+            Table tmp = this.tables.get(i);
+            if (tmp.tableName ==null){
                 continue;
             }
-            if(tmp.dbName.equals(name) || tmp.dbFile.getId()==file.getId()){
-                this.dbFiles.set(i,table);
+            if(tmp.tableName.equals(name) || tmp.file.getId()==file.getId()){
+                this.tables.set(i, table);
                 return;
             }
         }
-        this.dbFiles.add(table);
+        this.tables.add(table);
     }
 
     public void addTable(DbFile file, String name) {
@@ -91,9 +90,9 @@ public class Catalog {
      */
     public int getTableId(String name) throws NoSuchElementException {
         // TODO: some code goes here
-        for(DbFileItem table: dbFiles){
-            if(table.dbName.equals(name)){
-                return table.dbFile.getId();
+        for(Table table: tables){
+            if(table.tableName.equals(name)){
+                return table.file.getId();
             }
         }
         throw new NoSuchElementException("The table with name:" + name + " is not found");
@@ -108,9 +107,9 @@ public class Catalog {
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         // TODO: some code goes here
-        for(DbFileItem table: dbFiles){
-            if(table.dbFile.getId() == tableid){
-                return table.dbFile.getTupleDesc();
+        for(Table table: tables){
+            if(table.file.getId() == tableid){
+                return table.file.getTupleDesc();
             }
         }
         throw new NoSuchElementException("The table with tableid: " + tableid + " is not found");
@@ -124,17 +123,17 @@ public class Catalog {
      *                function passed to addTable
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
-        for(DbFileItem table: dbFiles){
-            if(table.dbFile.getId() == tableid){
-                return table.dbFile;
+        for(Table table: tables){
+            if(table.file.getId() == tableid){
+                return table.file;
             }
         }
         throw new NoSuchElementException("No DatabaseFile with tableid:" + tableid + " is found");
     }
 
     public String getPrimaryKey(int tableid) {
-        for(DbFileItem table: dbFiles){
-            if(table.dbFile.getId() == tableid){
+        for(Table table: tables){
+            if(table.file.getId() == tableid){
                 return table.primaryKeyField;
             }
         }
@@ -142,13 +141,19 @@ public class Catalog {
     }
 
     public Iterator<Integer> tableIdIterator() {
-        return null;
+        List<Integer> list = new ArrayList<>();
+        for(Table item: tables){
+            String name = item.tableName;
+            int tableId = getTableId(name);
+            list.add(tableId);
+        }
+        return list.iterator();
     }
 
     public String getTableName(int id) {
-        for(DbFileItem item: dbFiles){
-            if(item.dbFile.getId() == id){
-                return item.dbName;
+        for(Table item: tables){
+            if(item.file.getId() == id){
+                return item.tableName;
             }
         }
         throw new NoSuchElementException("id is not valid");
@@ -158,7 +163,7 @@ public class Catalog {
      * Delete all tables from the catalog
      */
     public void clear() {
-        Iterator<DbFileItem> iterator = dbFiles.iterator();
+        Iterator<Table> iterator = tables.iterator();
         while(iterator.hasNext()){
             iterator.remove();
         }

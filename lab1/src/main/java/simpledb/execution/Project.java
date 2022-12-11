@@ -11,6 +11,7 @@ import java.util.NoSuchElementException;
 
 /**
  * Project is an operator that implements a relational projection.
+ *
  */
 public class Project extends Operator {
 
@@ -22,7 +23,7 @@ public class Project extends Operator {
     /**
      * Constructor accepts a child operator to read tuples to apply projection
      * to and a list of fields in output tuple
-     *
+     *构造函数接收一个OpIterator以读取要应用投影的元组和输出元组中的字段列表
      * @param fieldList The ids of the fields child's tupleDesc to project out
      * @param typesList the types of the fields in the final projection
      * @param child     The child operator

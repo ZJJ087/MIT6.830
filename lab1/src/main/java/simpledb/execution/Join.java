@@ -5,6 +5,9 @@ import simpledb.storage.Tuple;
 import simpledb.storage.TupleDesc;
 import simpledb.transaction.TransactionAbortedException;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -13,7 +16,12 @@ import java.util.NoSuchElementException;
 public class Join extends Operator {
 
     private static final long serialVersionUID = 1L;
-
+    private JoinPredicate joinPredicate;
+    private OpIterator child1;
+    private OpIterator child2;
+    private TupleDesc tupleDesc;
+    private Iterator<Tuple> iterator;
+    private final List<Tuple> childTups = new ArrayList<>();
     /**
      * Constructor. Accepts two children to join and the predicate to join them
      * on
@@ -23,12 +31,15 @@ public class Join extends Operator {
      * @param child2 Iterator for the right(inner) relation to join
      */
     public Join(JoinPredicate p, OpIterator child1, OpIterator child2) {
-        // TODO: some code goes here
+        this.joinPredicate = p;
+        this.child1 = child1;
+        this.child2 = child2;
+        this.tupleDesc = TupleDesc.merge(child1.getTupleDesc(),child2.getTupleDesc());
+
     }
 
     public JoinPredicate getJoinPredicate() {
-        // TODO: some code goes here
-        return null;
+        return joinPredicate;
     }
 
     /**
@@ -36,8 +47,10 @@ public class Join extends Operator {
      *         alias or table name.
      */
     public String getJoinField1Name() {
-        // TODO: some code goes here
-        return null;
+        int field1 = joinPredicate.getField1();
+        TupleDesc tupleDesc = child1.getTupleDesc();
+        String fieldName = tupleDesc.getFieldName(field1);
+        return fieldName;
     }
 
     /**
@@ -45,8 +58,10 @@ public class Join extends Operator {
      *         alias or table name.
      */
     public String getJoinField2Name() {
-        // TODO: some code goes here
-        return null;
+        int field2 = joinPredicate.getField2();
+        TupleDesc tupleDesc = child2.getTupleDesc();
+        String fieldName = tupleDesc.getFieldName(field2);
+        return fieldName;
     }
 
     /**
@@ -54,21 +69,41 @@ public class Join extends Operator {
      *         implementation logic.
      */
     public TupleDesc getTupleDesc() {
-        // TODO: some code goes here
-        return null;
+        return tupleDesc;
     }
 
     public void open() throws DbException, NoSuchElementException,
             TransactionAbortedException {
-        // TODO: some code goes here
+        child1.open();
+        while(child1.hasNext()){
+            Tuple tupleChild1 = child1.next();
+            child2.open();
+            while(child2.hasNext()){
+                Tuple tupleChild2 = child2.next();
+                if (joinPredicate.filter(tupleChild1,tupleChild2)){
+                    Tuple tuple = new Tuple(tupleDesc);
+                    int index = 0;
+                    for(int i = 0; i < tupleChild1.getTupleDesc().numFields(); i++){
+                        tuple.setField(index++,tupleChild1.getField(i));
+                    }
+                    for(int i = 0; i < tupleChild2.getTupleDesc().numFields(); i++){
+                        tuple.setField(index++,tupleChild2.getField(i));
+                    }
+                    childTups.add(tuple);
+                }
+            }
+        }
+        iterator = childTups.iterator();
+        super.open();
     }
 
     public void close() {
-        // TODO: some code goes here
+        super.close();
+        iterator = null;
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
-        // TODO: some code goes here
+        iterator = childTups.iterator();
     }
 
     /**
@@ -90,7 +125,11 @@ public class Join extends Operator {
      * @see JoinPredicate#filter
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-        // TODO: some code goes here
+        if(iterator != null){
+            if(iterator.hasNext()){
+                return iterator.next();
+            }
+        }
         return null;
     }
 

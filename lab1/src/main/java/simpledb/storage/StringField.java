@@ -8,6 +8,7 @@ import java.io.IOException;
 
 /**
  * Instance of Field that stores a single String of a fixed length.
+ * String类型的字段
  */
 public class StringField implements Field {
 
