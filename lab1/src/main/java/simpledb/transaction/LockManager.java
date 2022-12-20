@@ -14,45 +14,59 @@ import java.util.concurrent.ConcurrentHashMap;
  * @description
  */
 public class LockManager {
-    private Map<Integer, List<Lock>> map; //锁表
+    //key：页id，value：作用于该页的所有lock
+    private Map<Integer, List<Lock>> lockCache;
 
-    public LockManager() {
-        this.map = new ConcurrentHashMap<>();
 
+    public LockManager(){
+        this.lockCache = new ConcurrentHashMap<>();
     }
 
-    public synchronized Boolean acquireLock(TransactionId tid, PageId pageId, Permissions permissions) {
-        Integer pid = pageId.getPageNumber();
-        Lock lock = new Lock(permissions, tid);
-        List<Lock> locks = map.get(pid);
-        if (locks == null) {
+    /**
+     * 获取锁
+     * @param tid
+     * @param pageId
+     * @param permissions
+     * @return
+     */
+    public synchronized  Boolean acquireLock(TransactionId tid, PageId pageId, Permissions permissions){
+        Lock lock = new Lock(tid, permissions);
+        int pid = pageId.getPageNumber();
+        List<Lock> locks = lockCache.get(pid);
+        if(locks==null || locks.size()==0){
             locks = new ArrayList<>();
             locks.add(lock);
-            map.put(pid, locks);
+            lockCache.put(pid,locks);
             return true;
         }
-        if (locks.size() == 1) {  //只有一个事务占有锁
-            Lock firstLock = locks.get(0);
-            if (firstLock.getTransactionId().equals(tid)) {
-                if (firstLock.getPermissions().equals(Permissions.READ_ONLY) && lock.getPermissions().equals(Permissions.READ_WRITE)) {
-                    firstLock.setPermissions(Permissions.READ_WRITE); //锁升级
+
+
+        if(locks.size()==1){
+            //当只有一个事务抢占锁
+            Lock curLock = locks.get(0);
+            if(curLock.getTransactionId().equals(tid)){
+                //判断是否进行锁升级
+                if(curLock.getPermissions().equals(Permissions.READ_ONLY) && lock.getPermissions().equals(Permissions.READ_WRITE)){
+                    curLock.setPermissions(Permissions.READ_WRITE);
                 }
                 return true;
-            } else {
-                if (firstLock.getPermissions().equals(Permissions.READ_ONLY) && lock.getPermissions().equals(Permissions.READ_ONLY)) {
+            }else{
+                if(curLock.getPermissions().equals(Permissions.READ_ONLY) && lock.getPermissions().equals(Permissions.READ_ONLY)){
                     locks.add(lock);
                     return true;
                 }
                 return false;
             }
         }
-        //list中有多个事务则说明全是共享锁
-        if (lock.getPermissions().equals(Permissions.READ_WRITE)) {
+
+        //当有多个事务抢占锁，说明必然是多个读事务
+        if(lock.getPermissions().equals(Permissions.READ_WRITE)){
             return false;
         }
-        //同一个事务重复获取读锁，不要进入列表！
-        for (Lock lock1 : locks) {
-            if (lock1.getTransactionId().equals(tid)) {
+
+        //每一个事物读锁并不需要重复获取
+        for(Lock l: locks){
+            if(l.getTransactionId().equals(lock.getTransactionId())){
                 return true;
             }
         }
@@ -61,31 +75,37 @@ public class LockManager {
     }
 
 
-    public synchronized void releaseLock(TransactionId transactionId, PageId pageId) {
-        List<Lock> locks = map.get(pageId.getPageNumber());
-        for (int i = 0; i < locks.size(); i++) {
-            Lock lock = locks.get(i);
-            // release lock
-            if (lock.getTransactionId().equals(transactionId)) {
-                locks.remove(lock);
-                if (locks.size() == 0) {
-                    map.remove(pageId.getPageNumber());
+    /**
+     * 释放锁
+     * @param tid
+     * @param pageId
+     */
+    public synchronized  void releaseLock(TransactionId tid,PageId pageId){
+        int pid = pageId.getPageNumber();
+        List<Lock> locks = lockCache.get(pid);
+        for(Lock l:locks){
+            if(l.getTransactionId().equals(tid)){
+                locks.remove(l);
+                if(locks.size()==0){
+                    lockCache.remove(pid);
                 }
                 return;
             }
         }
     }
 
-    public synchronized void releaseAllLock(TransactionId transactionId) {
-        for (Integer k : map.keySet()) {
-            List<Lock> locks = map.get(k);
-            for (int i = 0; i < locks.size(); i++) {
-                Lock lock = locks.get(i);
-                // release lock
-                if (lock.getTransactionId().equals(transactionId)) {
+    /**
+     * 释放当前事务的所有锁
+     * @param tid
+     */
+    public synchronized  void releaseAllLock(TransactionId tid){
+        for(Integer pid: lockCache.keySet()){
+            List<Lock> locks = lockCache.get(pid);
+            for(Lock lock:locks){
+                if(lock.getTransactionId().equals(tid)){
                     locks.remove(lock);
-                    if (locks.size() == 0) {
-                        map.remove(k);
+                    if(locks.size()==0){
+                        lockCache.remove(pid);
                     }
                     break;
                 }
@@ -93,11 +113,15 @@ public class LockManager {
         }
     }
 
-    public synchronized Boolean holdsLock(TransactionId tid, PageId p) {
-        List<Lock> locks = map.get(p.getPageNumber());
-        for (int i = 0; i < locks.size(); i++) {
-            Lock lock = locks.get(i);
-            if (lock.getTransactionId().equals(tid)) {
+    /**
+     * 判断是否持有锁
+     * @param tid
+     * @param pageId
+     * @return
+     */
+    public synchronized Boolean holdsLock(TransactionId tid,PageId pageId){
+        for(Lock lock : lockCache.get(pageId.getPageNumber())){
+            if(lock.getTransactionId().equals(tid)){
                 return true;
             }
         }

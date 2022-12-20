@@ -8,23 +8,23 @@ import simpledb.common.Permissions;
  * @description
  */
 public class Lock {
-    private Permissions permissions;
     private TransactionId transactionId;
+    private Permissions permissions;
 
-    public Lock(Permissions permissions, TransactionId transactionId) {
+    public Lock(TransactionId transactionId,Permissions permissions){
+        this.transactionId =  transactionId;
         this.permissions = permissions;
-        this.transactionId = transactionId;
     }
 
-    public TransactionId getTransactionId() {
+    public TransactionId getTransactionId(){
         return transactionId;
     }
 
-    public Permissions getPermissions() {
+    public Permissions getPermissions(){
         return permissions;
     }
 
-    public void setPermissions(Permissions permissions) {
+    public void setPermissions(Permissions permissions){
         this.permissions = permissions;
     }
 

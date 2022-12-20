@@ -57,7 +57,8 @@ public class BufferPool {
     public BufferPool(int numPages) {
         // TODO: some code goes here
         this.numPages = numPages;
-        lruCache = new LRUCache<PageId,Page>(numPages);
+        this.lruCache = new LRUCache<PageId,Page>(numPages);
+        this.lockManager = new LockManager();
     }
 
     public static int getPageSize() {
@@ -181,6 +182,12 @@ public class BufferPool {
             throws DbException, IOException, TransactionAbortedException {
         // TODO: some code goes here
         // not necessary for lab1
+        DbFile dbFile = Database.getCatalog().getDatabaseFile(tableId);
+        List<Page> pages = dbFile.insertTuple(tid, t);
+        for(Page page:pages){
+            page.markDirty(true,tid);
+            lruCache.put(page.getId(),page);
+        }
     }
 
     /**
@@ -200,6 +207,11 @@ public class BufferPool {
             throws DbException, IOException, TransactionAbortedException {
         // TODO: some code goes here
         // not necessary for lab1
+        DbFile dbFile = Database.getCatalog().getDatabaseFile(t.getRecordId().getPageId().getTableId());
+        List<Page> pages = dbFile.deleteTuple(tid,t);
+        for(Page page: pages){
+            page.markDirty(true,tid);
+        }
     }
 
     /**
