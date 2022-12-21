@@ -1,19 +1,17 @@
 package simpledb;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.NoSuchElementException;
-
 import junit.framework.JUnit4TestAdapter;
-
 import org.junit.Before;
 import org.junit.Test;
-
 import simpledb.common.Type;
 import simpledb.execution.Aggregator;
 import simpledb.execution.IntegerAggregator;
 import simpledb.execution.OpIterator;
 import simpledb.systemtest.SimpleDbTestBase;
+
+import java.util.NoSuchElementException;
+
+import static org.junit.Assert.assertEquals;
 
 public class IntegerAggregatorTest extends SimpleDbTestBase {
 

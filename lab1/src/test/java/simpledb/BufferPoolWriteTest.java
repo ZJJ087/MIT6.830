@@ -1,5 +1,17 @@
 package simpledb;
 
+import junit.framework.JUnit4TestAdapter;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import simpledb.common.Database;
+import simpledb.common.DbException;
+import simpledb.common.Permissions;
+import simpledb.common.Utility;
+import simpledb.storage.*;
+import simpledb.systemtest.SystemTestUtil;
+import simpledb.transaction.TransactionId;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -7,20 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import simpledb.common.Database;
-import simpledb.common.DbException;
-import simpledb.common.Permissions;
-import simpledb.common.Utility;
-import simpledb.storage.*;
-
-import static org.junit.Assert.*;
-import junit.framework.JUnit4TestAdapter;
-import simpledb.systemtest.SystemTestUtil;
-import simpledb.transaction.TransactionId;
+import static org.junit.Assert.assertEquals;
 
 public class BufferPoolWriteTest extends TestUtil.CreateHeapFile {
     private TransactionId tid;

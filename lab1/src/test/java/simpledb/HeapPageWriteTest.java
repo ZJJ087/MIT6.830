@@ -1,13 +1,9 @@
 package simpledb;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-
 import junit.framework.JUnit4TestAdapter;
-
 import org.junit.Before;
 import org.junit.Test;
-
+import simpledb.TestUtil.SkeletonFile;
 import simpledb.common.Database;
 import simpledb.common.DbException;
 import simpledb.common.Utility;
@@ -17,6 +13,9 @@ import simpledb.storage.Tuple;
 import simpledb.systemtest.SimpleDbTestBase;
 import simpledb.systemtest.SystemTestUtil;
 import simpledb.transaction.TransactionId;
+
+import java.util.Iterator;
+import java.util.LinkedList;
 
 import static org.junit.Assert.*;
 
@@ -29,7 +28,7 @@ public class HeapPageWriteTest extends SimpleDbTestBase {
      */
     @Before public void addTable() {
         this.pid = new HeapPageId(-1, -1);
-        Database.getCatalog().addTable(new TestUtil.SkeletonFile(-1, Utility.getTupleDesc(2)), SystemTestUtil.getUUID());
+        Database.getCatalog().addTable(new SkeletonFile(-1, Utility.getTupleDesc(2)), SystemTestUtil.getUUID());
     }
     
     /**

@@ -1,15 +1,14 @@
 package simpledb;
 
 import junit.framework.JUnit4TestAdapter;
-
 import org.junit.Before;
 import org.junit.Test;
-
 import simpledb.storage.HeapPageId;
 import simpledb.storage.RecordId;
 import simpledb.systemtest.SimpleDbTestBase;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 public class RecordIdTest extends SimpleDbTestBase {
 

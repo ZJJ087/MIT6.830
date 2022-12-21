@@ -1,13 +1,8 @@
 package simpledb;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import junit.framework.JUnit4TestAdapter;
-
 import org.junit.Before;
 import org.junit.Test;
-
 import simpledb.common.Type;
 import simpledb.common.Utility;
 import simpledb.execution.Aggregate;
@@ -15,6 +10,8 @@ import simpledb.execution.Aggregator;
 import simpledb.execution.OpIterator;
 import simpledb.storage.TupleDesc;
 import simpledb.systemtest.SimpleDbTestBase;
+
+import static org.junit.Assert.*;
 
 public class AggregateTest extends SimpleDbTestBase {
 

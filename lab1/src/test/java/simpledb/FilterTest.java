@@ -1,13 +1,8 @@
 package simpledb;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import junit.framework.JUnit4TestAdapter;
-
 import org.junit.Before;
 import org.junit.Test;
-
 import simpledb.common.Utility;
 import simpledb.execution.Filter;
 import simpledb.execution.OpIterator;
@@ -15,6 +10,8 @@ import simpledb.execution.Predicate;
 import simpledb.storage.Tuple;
 import simpledb.storage.TupleDesc;
 import simpledb.systemtest.SimpleDbTestBase;
+
+import static org.junit.Assert.*;
 
 public class FilterTest extends SimpleDbTestBase {
 

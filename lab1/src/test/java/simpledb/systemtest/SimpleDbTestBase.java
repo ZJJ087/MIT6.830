@@ -1,7 +1,6 @@
 package simpledb.systemtest;
 
 import org.junit.Before;
-
 import simpledb.common.Database;
 
 /**

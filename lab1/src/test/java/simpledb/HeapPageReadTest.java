@@ -1,5 +1,9 @@
 package simpledb;
 
+import junit.framework.JUnit4TestAdapter;
+import org.junit.Before;
+import org.junit.Test;
+import simpledb.TestUtil.SkeletonFile;
 import simpledb.common.Database;
 import simpledb.common.Utility;
 import simpledb.storage.*;
@@ -8,14 +12,11 @@ import simpledb.systemtest.SystemTestUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import junit.framework.JUnit4TestAdapter;
+import static org.junit.Assert.*;
 
 public class HeapPageReadTest extends SimpleDbTestBase {
     private HeapPageId pid;
@@ -71,7 +72,7 @@ public class HeapPageReadTest extends SimpleDbTestBase {
      */
     @Before public void addTable() {
         this.pid = new HeapPageId(-1, -1);
-        Database.getCatalog().addTable(new TestUtil.SkeletonFile(-1, Utility.getTupleDesc(2)), SystemTestUtil.getUUID());
+        Database.getCatalog().addTable(new SkeletonFile(-1, Utility.getTupleDesc(2)), SystemTestUtil.getUUID());
     }
 
     /**

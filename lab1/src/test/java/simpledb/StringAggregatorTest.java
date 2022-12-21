@@ -1,17 +1,17 @@
 package simpledb;
 
-import java.util.*;
-
+import junit.framework.JUnit4TestAdapter;
 import org.junit.Before;
 import org.junit.Test;
-
 import simpledb.common.Type;
 import simpledb.execution.Aggregator;
 import simpledb.execution.OpIterator;
 import simpledb.execution.StringAggregator;
 import simpledb.systemtest.SimpleDbTestBase;
+
+import java.util.NoSuchElementException;
+
 import static org.junit.Assert.assertEquals;
-import junit.framework.JUnit4TestAdapter;
 
 public class StringAggregatorTest extends SimpleDbTestBase {
 

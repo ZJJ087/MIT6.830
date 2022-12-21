@@ -1,7 +1,5 @@
 package simpledb.systemtest;
 
-import static org.junit.Assert.*;
-
 import simpledb.common.DbException;
 import simpledb.execution.Filter;
 import simpledb.execution.Predicate;
@@ -9,6 +7,8 @@ import simpledb.execution.SeqScan;
 import simpledb.storage.HeapFile;
 import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
+
+import static org.junit.Assert.assertNotNull;
 
 public class FilterTest extends FilterBase {
     @Override

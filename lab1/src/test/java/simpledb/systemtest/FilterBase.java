@@ -1,14 +1,6 @@
 package simpledb.systemtest;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.*;
 import org.junit.Test;
-
 import simpledb.common.Database;
 import simpledb.common.DbException;
 import simpledb.common.Utility;
@@ -17,6 +9,14 @@ import simpledb.storage.HeapFile;
 import simpledb.storage.IntField;
 import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 public abstract class FilterBase extends SimpleDbTestBase {
     private static final int COLUMNS = 3;

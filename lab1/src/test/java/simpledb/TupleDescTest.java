@@ -1,17 +1,16 @@
 package simpledb;
 
-import java.util.NoSuchElementException;
-
+import junit.framework.JUnit4TestAdapter;
+import org.junit.Assert;
 import org.junit.Test;
-
 import simpledb.common.Type;
 import simpledb.common.Utility;
 import simpledb.storage.TupleDesc;
 import simpledb.systemtest.SimpleDbTestBase;
 
+import java.util.NoSuchElementException;
+
 import static org.junit.Assert.*;
-import org.junit.Assert;
-import junit.framework.JUnit4TestAdapter;
 
 public class TupleDescTest extends SimpleDbTestBase {
 
@@ -73,7 +72,6 @@ public class TupleDescTest extends SimpleDbTestBase {
     /**
      * Unit test for TupleDesc.getType()
      */
-    //已通过
     @Test public void getType() {
         int[] lengths = new int[] { 1, 2, 1000 };
 
@@ -87,7 +85,6 @@ public class TupleDescTest extends SimpleDbTestBase {
     /**
      * Unit test for TupleDesc.nameToId()
      */
-    //已通过
     @Test public void nameToId() {
         int[] lengths = new int[] { 1, 2, 1000 };
         String prefix = "test";
@@ -129,7 +126,6 @@ public class TupleDescTest extends SimpleDbTestBase {
     /**
      * Unit test for TupleDesc.getSize()
      */
-    //已通过
     @Test public void getSize() {
         int[] lengths = new int[] { 1, 2, 1000 };
 
@@ -142,7 +138,6 @@ public class TupleDescTest extends SimpleDbTestBase {
     /**
      * Unit test for TupleDesc.numFields()
      */
-    //已通过
     @Test public void numFields() {
         int[] lengths = new int[] { 1, 2, 1000 };
 
@@ -151,7 +146,7 @@ public class TupleDescTest extends SimpleDbTestBase {
             assertEquals(len, td.numFields());
         }
     }
-    //已通过
+
     @Test public void testEquals() {
         TupleDesc singleInt = new TupleDesc(new Type[]{Type.INT_TYPE});
         TupleDesc singleInt2 = new TupleDesc(new Type[]{Type.INT_TYPE});
