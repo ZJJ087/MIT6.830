@@ -222,7 +222,16 @@ public class BufferPool {
     public synchronized void flushAllPages() throws IOException {
         // TODO: some code goes here
         // not necessary for lab1
-
+        LRUCache<PageId, Page>.DLinkedNode head = lruCache.getHead();
+        LRUCache<PageId, Page>.DLinkedNode tail = lruCache.getTail();
+        while(head!=tail){
+            Page page = head.value;
+            if(page!=null && page.isDirty()!=null){
+                DbFile dbFile = Database.getCatalog().getDatabaseFile(page.getId().getTableId());
+                dbFile.writePage(page);
+            }
+            head = head.next;
+        }
     }
 
     /**
@@ -237,6 +246,16 @@ public class BufferPool {
     public synchronized void removePage(PageId pid) {
         // TODO: some code goes here
         // not necessary for lab1
+        LRUCache<PageId, Page>.DLinkedNode head = lruCache.getHead();
+        LRUCache<PageId, Page>.DLinkedNode tail = lruCache.getTail();
+        while(head != tail){
+            PageId key = head.key;
+            if(key != null && key.equals(pid)){
+                lruCache.remove(head);
+                return;
+            }
+            head = head.next;
+        }
     }
 
     /**
@@ -247,6 +266,12 @@ public class BufferPool {
     private synchronized void flushPage(PageId pid) throws IOException {
         // TODO: some code goes here
         // not necessary for lab1
+        Page page = lruCache.get(pid);
+        if(page.isDirty() != null){
+            DbFile dbFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
+            page.markDirty(false,null);
+            dbFile.writePage(page);
+        }
     }
 
     /**
@@ -264,5 +289,25 @@ public class BufferPool {
     private synchronized void evictPage() throws DbException {
         // TODO: some code goes here
         // not necessary for lab1
+        Page page = lruCache.getTail().prev.value;
+        if(page != null && page.isDirty() != null){
+            discardLastNotDirtyPage();
+        }else{
+            lruCache.discard();
+        }
+    }
+
+    private void discardLastNotDirtyPage() throws DbException {
+        LRUCache<PageId, Page>.DLinkedNode head = lruCache.getHead();
+        LRUCache<PageId, Page>.DLinkedNode tail = lruCache.getTail();
+        while(head != tail){
+            Page value = tail.value;
+            if(value != null && value.isDirty() == null){
+                lruCache.remove(tail);
+                return;
+            }
+            tail = tail.prev;
+        }
+        throw new DbException("no dirty page");
     }
 }
