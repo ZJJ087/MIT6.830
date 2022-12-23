@@ -105,7 +105,7 @@ public class JoinOptimizer {
             // HINT: You may need to use the variable "j" if you implemented
             // a join algorithm that's more complicated than a basic
             // nested-loops join.
-            return -1.0;
+            return cost1 + card1*cost2 + card1*card2;
         }
     }
 
@@ -137,6 +137,17 @@ public class JoinOptimizer {
 
     /**
      * Estimate the join cardinality of two tables.
+     * 1.For equality joins, when one of the attributes is a primary key,
+     * the number of tuples produced by the join cannot be larger than the cardinality of the non-primary key attribute.
+     *
+     * 2.For equality joins when there is no primary key, it's hard to say much about what the size of the output is --
+     * it could be the size of the product of the cardinalities of the tables (if both tables have the same value for all tuples) --
+     * or it could be 0. It's fine to make up a simple heuristic (say, the size of the larger of the two tables).
+     *
+     * 3.For range scans, it is similarly hard to say anything accurate about sizes.
+     * The size of the output should be proportional to the sizes of the inputs.
+     * It is fine to assume that a fixed fraction of the cross-product is emitted by range scans (say, 30%).
+     * In general, the cost of a range join should be larger than the cost of a non-primary key equality join of two tables of the same size.
      */
     public static int estimateTableJoinCardinality(Predicate.Op joinOp,
                                                    String table1Alias, String table2Alias, String field1PureName,
@@ -145,7 +156,28 @@ public class JoinOptimizer {
                                                    Map<String, Integer> tableAliasToId) {
         int card = 1;
         // TODO: some code goes here
-        return card <= 0 ? 1 : card;
+        if (joinOp.equals(Predicate.Op.EQUALS)){
+            if(!t1pkey && !t2pkey){
+                return Math.max(card1,card2);
+            }else if(!t1pkey){
+                return card1;
+            }else if(!t2pkey){
+                return card2;
+            }else{
+                return Math.min(card1,card2);
+            }
+        }else if (joinOp.equals(Predicate.Op.NOT_EQUALS)){
+            if(!t1pkey && !t2pkey){
+                return card1*card2 - Math.max(card1,card2);
+            }else if(!t2pkey){
+                return card1*card2 - card2;
+            }else if(!t1pkey){
+                return card1*card2 - card1;
+            }else {
+                return card1*card2 - Math.min(card1,card2);
+            }
+        }
+        return (int)(0.3 * card1 * card2);
     }
 
     /**
@@ -198,10 +230,38 @@ public class JoinOptimizer {
             Map<String, TableStats> stats,
             Map<String, Double> filterSelectivities, boolean explain)
             throws ParsingException {
-        // Not necessary for labs 1 and 2.
-
-        // TODO: some code goes here
-        return joins;
+        // some code goes here
+        //Replace the following
+        int size = joins.size();
+        PlanCache planCache = new PlanCache();
+        CostCard bestCostCard = null;
+        for(int i=1;i<=size;i++){
+            //得到固定长度i的子集，并遍历每一个子集
+            for(Set<LogicalJoinNode> s: enumerateSubsets(joins,i)){
+                //遍历集合中的集合，得到集合中的每个集合的最小
+                double bestCost = Double.MAX_VALUE;
+                bestCostCard = new CostCard();
+                for(LogicalJoinNode logicalJoinNode:s){
+                    //计算 logicalJoinNode 与 其他node(s中的其它node)的join 结果
+                    CostCard costCard = computeCostAndCardOfSubplan(stats, filterSelectivities, logicalJoinNode, s, bestCost, planCache);
+                    if(costCard==null){
+                        continue;
+                    }
+                    if(costCard.cost<bestCost){
+                        bestCost = costCard.cost;
+                        bestCostCard = costCard;
+                    }
+                }
+                planCache.addPlan(s,bestCost,bestCostCard.card,bestCostCard.plan);
+            }
+        }
+        //是否解释其查询计划
+        if(explain){
+            assert bestCostCard!=null;
+            printJoins(bestCostCard.plan,planCache,stats,filterSelectivities);
+        }
+        assert bestCostCard!=null;
+        return bestCostCard.plan;
     }
 
     // ===================== Private Methods =================================
