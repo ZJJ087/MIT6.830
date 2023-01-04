@@ -27,7 +27,9 @@ public class LockManager {
      * @param tid
      * @param pageId
      * @param permissions
-     * @return
+     * @return 是否获取锁成功
+     *         -true 获取锁成功
+     *         -false 获取锁失败
      */
     public synchronized  Boolean acquireLock(TransactionId tid, PageId pageId, Permissions permissions){
         Lock lock = new Lock(tid, permissions);

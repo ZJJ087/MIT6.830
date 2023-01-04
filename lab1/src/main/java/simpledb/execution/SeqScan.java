@@ -11,7 +11,9 @@ import simpledb.storage.TupleDesc;
 import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -27,6 +29,7 @@ public class SeqScan implements OpIterator {
     private int tableId;
     private String tableAlias;
     private DbFileIterator iterator;
+
     /**
      * Creates a sequential scan over the specified table as a part of the
      * specified transaction.
@@ -84,10 +87,21 @@ public class SeqScan implements OpIterator {
     }
 
     public void open() throws DbException, TransactionAbortedException {
-        // TODO: some code goes here
+        /*
         Catalog catalog = Database.getCatalog();
         DbFile databaseFile = catalog.getDatabaseFile(tableId);
-        iterator = databaseFile.iterator(transactionId);
+        *//*iterator = databaseFile.iterator(transactionId);
+        iterator.open();*//*
+        DbFileIterator dbFileIterator = databaseFile.iterator(transactionId);
+        while (dbFileIterator.hasNext()){
+            Tuple tuple = dbFileIterator.next();
+            tuples.add(tuple);
+        }
+        iterator = (DbFileIterator) tuples.iterator();
+        iterator.open();*/
+        DbFile dbFile = Database.getCatalog().getDatabaseFile(tableId);
+        DbFileIterator dbFileIterator = dbFile.iterator(transactionId);
+        this.iterator = dbFileIterator;
         iterator.open();
     }
 
@@ -118,28 +132,22 @@ public class SeqScan implements OpIterator {
 
     public boolean hasNext() throws TransactionAbortedException, DbException {
         // TODO: some code goes here
-        this.open();
-        return iterator.hasNext();
+        return this.iterator.hasNext();
     }
 
     public Tuple next() throws NoSuchElementException,
             TransactionAbortedException, DbException {
         // TODO: some code goes here
-        this.open();
-        return iterator.next();
+        return this.iterator.next();
     }
 
     public void close() {
         // TODO: some code goes here
-        if(iterator != null){
-            iterator.close();
-        }
+        this.iterator.close();
     }
 
     public void rewind() throws DbException, NoSuchElementException,
             TransactionAbortedException {
-        if(iterator != null){
-            iterator.rewind();
-        }
+        this.iterator.rewind();
     }
 }

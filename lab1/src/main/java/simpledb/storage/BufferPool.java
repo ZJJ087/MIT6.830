@@ -309,7 +309,6 @@ public class BufferPool {
                     Database.getLogFile().logWrite(page.isDirty(),page.getBeforeImage(),page);
                     Database.getLogFile().force();
                     page.markDirty(false,null);
-
                     dbFile.writePage(page);
                     page.setBeforeImage();
                 }catch (IOException e){
@@ -325,31 +324,26 @@ public class BufferPool {
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
     private synchronized  void evictPage() throws DbException {
-        // some code goes here
-        // not necessary for lab1
         Page page = buffer.getTail().prev.value;
-        if(page!=null && page.isDirty()!=null){
-            findNotDirty();
-        }else{
-            //不是脏页没改过，不需要写磁盘
+        if(page!=null && page.isDirty()!=null){//page是脏页
+            findNotDirtyPage();
+        }else{//page不是脏页,直接淘汰掉
             buffer.discard();
         }
     }
 
-    private void findNotDirty() throws DbException {
+    private void findNotDirtyPage() throws DbException{
         LRUCache<PageId, Page>.DLinkedNode head = buffer.getHead();
-        LRUCache<PageId, Page>.DLinkedNode tail = buffer.getTail();
-        tail = tail.prev;
-        while (head != tail) {
-            Page value = tail.value;
-            if (value != null && value.isDirty() == null) {
+        LRUCache<PageId, Page>.DLinkedNode tail = buffer.getTail().prev;
+        while(tail != head){
+            Page curPage = tail.value;
+            if(curPage != null && curPage.isDirty() == null){
                 buffer.remove(tail);
                 return;
             }
             tail = tail.prev;
         }
-        //没有非脏页，抛出异常
-        throw new DbException("no dirty page");
+        throw new DbException("No dirty page in BufferPool");
     }
 
 
