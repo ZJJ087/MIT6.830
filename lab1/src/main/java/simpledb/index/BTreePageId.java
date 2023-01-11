@@ -66,6 +66,7 @@ public class BTreePageId implements PageId {
 
     /**
      * @return the category of this page
+     *
      */
     public int pgcateg() {
         return pgcateg;

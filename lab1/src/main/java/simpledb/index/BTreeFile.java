@@ -31,6 +31,7 @@ public class BTreeFile implements DbFile {
     private final File f;
     private final TupleDesc td;
     private final int tableid;
+    //索引字段
     private final int keyField;
 
     /**
@@ -185,7 +186,33 @@ public class BTreeFile implements DbFile {
     private BTreeLeafPage findLeafPage(TransactionId tid, Map<PageId, Page> dirtypages, BTreePageId pid, Permissions perm,
                                        Field f)
             throws DbException, TransactionAbortedException {
-        // TODO: some code goes here
+
+        if (pid.pgcateg() == BTreePageId.LEAF) { //递归到了叶子页
+            BTreeLeafPage page = (BTreeLeafPage) getPage(tid, dirtypages, pid, perm);
+            return page;
+        }
+        BTreeInternalPage page = (BTreeInternalPage) getPage(tid, dirtypages, pid, perm);
+        //通过BTreeInternalPage的迭代器来查看InternalPage有没有满足要求的key
+        Iterator<BTreeEntry> iterator = page.iterator();
+        BTreeEntry next = null;
+        if (f == null) {//f为null返回最左端的叶子节点
+            if (iterator.hasNext()) {
+                next = iterator.next();
+                return findLeafPage(tid, dirtypages, next.getLeftChild(), perm, f);
+            }
+            return null;
+        }
+        while (iterator.hasNext()) {
+            next = iterator.next();
+            Field key = next.getKey();
+            if (f.compare(Op.LESS_THAN_OR_EQ, key)) {
+                // 当有重复值的时候 节点分裂有可能一般在左边一半在右边，所以是小于等于
+                return findLeafPage(tid, dirtypages, next.getLeftChild(), perm, f);
+            }
+        }
+        if (next != null) {
+            return findLeafPage(tid, dirtypages, next.getRightChild(), perm, f);
+        }
         return null;
     }
 
@@ -227,16 +254,45 @@ public class BTreeFile implements DbFile {
      */
     public BTreeLeafPage splitLeafPage(TransactionId tid, Map<PageId, Page> dirtypages, BTreeLeafPage page, Field field)
             throws DbException, IOException, TransactionAbortedException {
-        // TODO: some code goes here
-        //
-        // Split the leaf page by adding a new page on the right of the existing
-        // page and moving half of the tuples to the new page.  Copy the middle key up
-        // into the parent page, and recursively split the parent as needed to accommodate
-        // the new entry.  getParentWithEmtpySlots() will be useful here.  Don't forget to update
-        // the sibling pointers of all the affected leaf pages.  Return the page into which a
-        // tuple with the given key field should be inserted.
-        return null;
+        int mid = page.getNumTuples()/2;
+        //新建一个空的叶节点，用于将page的右半边复制过去
+        BTreeLeafPage leafPage = (BTreeLeafPage) getEmptyPage(tid, dirtypages, BTreePageId.LEAF);
+        //使用reverseIterator拿后半段
+        Iterator<Tuple> iterator = page.reverseIterator();
+        while(iterator.hasNext() && mid-->0){
+            Tuple tuple = iterator.next();
+            page.deleteTuple(tuple);
+            leafPage.insertTuple(tuple);
+        }
 
+        //拿当前page的parent page
+        BTreeInternalPage parentPage = getParentWithEmptySlots(tid, dirtypages, page.getParentId(), field);
+        Tuple midTuple = iterator.next();
+        if(midTuple == null){
+            throw new DbException("");
+        }
+        BTreeEntry parentEntry = new BTreeEntry(field, page.getId(), leafPage.getId());
+        parentPage.insertEntry(parentEntry);
+
+        BTreePageId pageRightSiblingId = page.getRightSiblingId();
+        if(pageRightSiblingId != null){
+            BTreeLeafPage rightLeafPage = (BTreeLeafPage) getPage(tid, dirtypages, pageRightSiblingId, Permissions.READ_WRITE);
+            rightLeafPage.setLeftSiblingId(leafPage.getId());
+            dirtypages.put(rightLeafPage.getId(),rightLeafPage);
+        }
+
+        leafPage.setRightSiblingId(page.getRightSiblingId());
+        leafPage.setLeftSiblingId(page.getId());
+        page.setRightSiblingId(leafPage.getId());
+
+        leafPage.setParentId(parentPage.getId());
+        dirtypages.put(parentPage.getId(),parentPage);
+        dirtypages.put(page.getId(),page);
+        dirtypages.put(leafPage.getId(),leafPage);
+        if(midTuple.getField(keyField).compare(Op.GREATER_THAN_OR_EQ,field)){
+            return page;
+        }
+        return leafPage;
     }
 
     /**

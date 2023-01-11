@@ -14,7 +14,7 @@ import java.util.NoSuchElementException;
 /**
  * Each instance of BTreeInternalPage stores data for one page of a BTreeFile and
  * implements the Page interface that is used by BufferPool.
- *
+ * 索引节点
  * @see BTreeFile
  * @see BufferPool
  */

@@ -15,7 +15,7 @@ import java.util.Arrays;
 /**
  * Each instance of BTreeHeaderPage stores data for one page of a BTreeFile and
  * implements the Page interface that is used by BufferPool.
- *
+ * 用于表示Internal page某个slot是否存在page
  * @see BTreeFile
  * @see BufferPool
  */
