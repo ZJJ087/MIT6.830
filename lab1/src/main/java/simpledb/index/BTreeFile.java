@@ -319,6 +319,8 @@ public class BTreeFile implements DbFile {
     public BTreeInternalPage splitInternalPage(TransactionId tid, Map<PageId, Page> dirtypages,
                                                BTreeInternalPage page, Field field)
             throws DbException, IOException, TransactionAbortedException {
+
+
         // TODO: some code goes here
         //
         // Split the internal page by adding a new page on the right of the existing
@@ -328,6 +330,9 @@ public class BTreeFile implements DbFile {
         // the parent pointers of all the children moving to the new page.  updateParentPointers()
         // will be useful here.  Return the page into which an entry with the given key field
         // should be inserted.
+        int mid = page.getNumEntries()/2;
+        BTreeInternalPage internalPage = (BTreeInternalPage) getEmptyPage(tid, dirtypages, BTreePageId.INTERNAL);
+
         return null;
     }
 
