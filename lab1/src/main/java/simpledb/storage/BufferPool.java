@@ -187,7 +187,6 @@ public class BufferPool {
         // some code goes here
         // not necessary for lab1
         DbFile dbFile = Database.getCatalog().getDatabaseFile(tableId);
-        //注意，insertTuple函数并不会
         List<Page> pages = dbFile.insertTuple(tid, t);
         for(Page page : pages){
             page.markDirty(true,tid);

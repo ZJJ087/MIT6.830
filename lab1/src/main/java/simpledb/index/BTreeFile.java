@@ -332,8 +332,33 @@ public class BTreeFile implements DbFile {
         // should be inserted.
         int mid = page.getNumEntries()/2;
         BTreeInternalPage internalPage = (BTreeInternalPage) getEmptyPage(tid, dirtypages, BTreePageId.INTERNAL);
+        Iterator<BTreeEntry> riterator = page.reverseIterator();
+        while(riterator.hasNext() && mid-->0){
+            BTreeEntry entry = riterator.next();
+            page.deleteKeyAndRightChild(entry);
+            internalPage.insertEntry(entry);
+        }
+        BTreeEntry up = riterator.next();
+        if(up == null){
+            throw new DbException("No more entry to split");
+        }
+        page.deleteKeyAndRightChild(up);
+        //up entry往上提，它的左孩子就是page，右孩子就是新的internal page
+        up.setLeftChild(page.getId());
+        up.setRightChild(internalPage.getId());
+        updateParentPointers(tid,dirtypages,internalPage);
 
-        return null;
+        BTreeInternalPage parentPage = getParentWithEmptySlots(tid, dirtypages, page.getParentId(), field);
+        parentPage.insertEntry(up);
+        page.setParentId(parentPage.getId());
+        internalPage.setParentId(parentPage.getId());
+        dirtypages.put(parentPage.getId(),parentPage);
+        dirtypages.put(internalPage.getId(),internalPage);
+        dirtypages.put(page.getId(),page);
+        if (up.getKey().compare(Op.GREATER_THAN_OR_EQ,field)){
+            return page;
+        }
+        return internalPage;
     }
 
     /**
